@@ -184,12 +184,15 @@ var RAY=50;
 function needBE(){var t=S.t;return t.lat!=null&&!t.ld&&(t.need||!t.fc||hav(t.lat,t.lon,t.fc[0],t.fc[1])>10)}
 function fetchBE(){var t=S.t;if(t.lat==null)return;var tk=t.bk=(t.bk||0)+1,la=t.lat,lo=t.lon,ar='(around:'+RAY*1000+','+la.toFixed(5)+','+lo.toFixed(5)+')';t.de="";t.ld=1;t.need=0;
  var q='[out:json][timeout:60];(nwr["amenity"="fuel"]["brand"~"Total",i]'+ar+';nwr["amenity"="fuel"]["name"~"Total",i]'+ar+';);out center tags;',eps=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"],i=0;
+ function got(L){t.ld=0;t.all=L;t.fc=[la,lo];t.dbT=Date.now();t.rt=null;if(t.best&&!L.some(function(x){return x.id===t.best.s.id}))t.best=null;try{localStorage.setItem("krinkels-tot",JSON.stringify({list:L,c:t.fc,t:t.dbT}))}catch(x){}near();upd()}
+ // D'abord la liste stations.json publiée avec l'appli (mise à jour chaque semaine), Overpass en secours.
+ function st(){fetch("stations.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){if(tk!==t.bk)return;if(!j.list||!j.list.length)throw 0;got(j.list.filter(function(s){return hav(la,lo,s.lat,s.lon)<=RAY}))}).catch(function(){nx()})}
  function nx(){if(tk!==t.bk)return;if(i>=eps.length){t.ld=0;t.de="Impossible de charger les stations Total autour de toi (connexion ou service indisponible).";upd();return}
   var ct=window.AbortController?new AbortController():null,to=setTimeout(function(){if(ct)ct.abort()},45000);
   fetch(eps[i++],{method:"POST",body:"data="+encodeURIComponent(q),headers:{"Content-Type":"application/x-www-form-urlencoded"},signal:ct?ct.signal:undefined}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){clearTimeout(to);if(tk!==t.bk)return;var seen={},L=[];
    (j.elements||[]).forEach(function(e){var g=e.tags||{},la=e.lat!=null?e.lat:(e.center&&e.center.lat),lo=e.lon!=null?e.lon:(e.center&&e.center.lon),id=e.type+e.id;if(la==null||seen[id])return;seen[id]=1;L.push({id:id,lat:la,lon:lo,nom:g.name||g.brand||"Total",rue:((g["addr:housenumber"]||"")+" "+(g["addr:street"]||"")).trim(),ville:((g["addr:postcode"]||"")+" "+(g["addr:city"]||"")).trim(),h:g.opening_hours||"",dz:g["fuel:diesel"]==="yes"})});
-   t.ld=0;t.all=L;t.fc=[la,lo];t.dbT=Date.now();t.rt=null;if(t.best&&!L.some(function(x){return x.id===t.best.s.id}))t.best=null;try{localStorage.setItem("krinkels-tot",JSON.stringify({list:L,c:t.fc,t:t.dbT}))}catch(x){}near();upd()}).catch(function(){clearTimeout(to);nx()})}
- nx();upd()}
+   got(L)}).catch(function(){clearTimeout(to);nx()})}
+ st();upd()}
 function near(){var t=S.t;if(t.lat==null)return;if(needBE())fetchBE();if(!t.all)return;t.all.forEach(function(s){s.d=hav(t.lat,t.lon,s.lat,s.lon)});t.nl=t.all.filter(function(s){return s.d<=RAY}).sort(function(a,b){return a.d-b.d}).slice(0,15);t.up=Date.now();
  if(!t.nl.length){t.best=null;return}
  var r=t.rt;if(!r||hav(t.lat,t.lon,r.lat,r.lon)>0.3||Date.now()-r.t>90000)routeBest()}
@@ -197,7 +200,7 @@ function est(s){var km=s.d*1.35;return{s:s,km:km,dur:km/55*3600,est:1}}
 function routeBest(){var t=S.t,c=(t.nl||[]).slice(0,5);if(!c.length)return;t.rt={lat:t.lat,lon:t.lon,t:Date.now()};var tk=t.rk=(t.rk||0)+1;
  if(!t.best||!c.some(function(x){return x.id===t.best.s.id}))t.best=est(c[0]);else if(t.best.est)t.best=est(t.best.s);
  var u="https://router.project-osrm.org/table/v1/driving/"+t.lon+","+t.lat+";"+c.map(function(x){return x.lon+","+x.lat}).join(";")+"?sources=0&annotations=duration,distance";
- fetch(u).then(function(r){return r.json()}).then(function(j){if(tk!==t.rk||!j.durations)return;var d=j.durations[0],ds=j.distances?j.distances[0]:null,bi=-1;for(var i=1;i<d.length;i++){if(d[i]!=null&&(bi<0||d[i]<d[bi]))bi=i}if(bi<0)return;t.best={s:c[bi-1],dur:d[bi],km:ds&&ds[bi]!=null?ds[bi]/1000:c[bi-1].d*1.35,est:0};upd()}).catch(function(){})}
+ fetch(u).then(function(r){return r.json()}).then(function(j){if(tk!==t.rk||!j.durations)return;var d=j.durations[0],ds=j.distances?j.distances[0]:null,bi=-1;for(var i=1;i<d.length&&i<=c.length;i++){if(d[i]!=null&&(bi<0||d[i]<d[bi]))bi=i}if(bi<0)return;t.best={s:c[bi-1],dur:d[bi],km:ds&&ds[bi]!=null?ds[bi]/1000:c[bi-1].d*1.35,est:0};upd()}).catch(function(){})}
 function adr(s){return (s.rue+(s.rue&&s.ville?", ":"")+s.ville).trim()}
 function itin(s){return '<a class="go" href="https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon+'" target="_blank" rel="noopener">'+I('<path d="M3 11l18-8-8 18-2-8-8-2z"/>')+'Itinéraire</a>'}
 function infoHtml(){var t=S.t,b=t.best,mp='<a class="go" style="margin-top:10px" href="'+MAPT+'" target="_blank" rel="noopener">Chercher dans Google Maps</a>'+(t.ge?'<button class="btn" style="margin:10px 0 0 8px" onclick="retryGeo()">↻ Réessayer</button>':'');

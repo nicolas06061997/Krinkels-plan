@@ -1,0 +1,24 @@
+name: Stations Total
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/stations.py
+      - name: Enregistrer la liste
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stations.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Mise à jour des stations Total"
+          git push
