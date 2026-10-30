@@ -317,7 +317,7 @@ draw();
 <script>
 // Version de l'appli : la seule à changer à chaque mise à jour, avec la même valeur dans version.json.
 // Le service worker est enregistré avec cette version (sw.js?v=…), ce qui force son remplacement et vide l'ancien cache.
-var APPV="2026-10-30.3";
+var APPV="2026-10-30.4";
 var SWR=null,BIP=null;
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
 
@@ -332,22 +332,28 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden)chkV
 // Installation : bouton direct quand le navigateur le permet (Chrome Android), sinon explications.
 function standalone(){try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(x){return false}}
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
-function isChrome(){var u=navigator.userAgent;return /Chrome\//.test(u)&&!/EdgA?\/|OPR\/|SamsungBrowser|HuaweiBrowser|HeyTapBrowser|MiuiBrowser|YaBrowser|Firefox|FxiOS|CriOS/.test(u)}
+// Navigateurs intégrés (Messenger, WhatsApp, Facebook, Instagram…) : ils ne savent pas installer d'appli.
+function inApp(){return /; wv\)|FBAN|FBAV|FB_IAB|Messenger|Instagram|WhatsApp|Snapchat|musical_ly|TikTok|Line\/|GSA\//.test(navigator.userAgent)}
+function isAndroid(){return /Android/i.test(navigator.userAgent)}
+function isChrome(){var u=navigator.userAgent;return !inApp()&& /Chrome\//.test(u)&&!/EdgA?\/|OPR\/|SamsungBrowser|HuaweiBrowser|HeyTapBrowser|MiuiBrowser|YaBrowser|Firefox|FxiOS|CriOS/.test(u)}
 function showIns(force){if(standalone()||document.getElementById("upd").classList.contains("on"))return;
  if(!force){try{if(Date.now()-(+localStorage.getItem("krinkels-ins")||0)<3*864e5)return}catch(x){}}
  var m=document.getElementById("insm"),b=document.getElementById("insb");
  if(BIP){m.textContent="Ajoute l’appli sur ton écran d’accueil, en un appui.";b.textContent="Installer";b.style.display=""}
+ else if(inApp()){m.textContent="Tu es dans le navigateur de Messenger/WhatsApp : ouvre l’appli dans "+(isIOS()?"Safari":"Chrome")+" pour l’installer.";b.textContent=isAndroid()?"Ouvrir dans Chrome":"Copier le lien";b.style.display=""}
  else if(isIOS()){m.textContent="Dans Safari : touche Partager ⬆️ puis « Sur l’écran d’accueil ».";b.style.display="none"}
  else if(isChrome()){m.textContent="Menu ⋮ en haut à droite → « Installer l’application ».";b.style.display="none"}
  else{m.textContent="Ce navigateur ne peut pas l’installer : copie le lien et ouvre-le dans Chrome.";b.textContent="Copier le lien";b.style.display=""}
  document.getElementById("ins").classList.add("on")}
 function insLater(){try{localStorage.setItem("krinkels-ins",Date.now())}catch(x){}document.getElementById("ins").classList.remove("on")}
 function doIns(){if(BIP){var e=BIP;BIP=null;e.prompt();e.userChoice.then(function(c){if(c&&c.outcome==="accepted")document.getElementById("ins").classList.remove("on");else insLater()}).catch(function(){});return}
- var u=location.href.split("#")[0];(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast("Lien copié ✓ Colle-le dans Chrome")}).catch(function(){prompt("Copie ce lien et ouvre-le dans Chrome :",u)})}
+ var u=location.href.split("#")[0];
+ if(inApp()&&isAndroid()){location.href="intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";return}(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast("Lien copié ✓ Colle-le dans Chrome")}).catch(function(){prompt("Copie ce lien et ouvre-le dans Chrome :",u)})}
 addEventListener("beforeinstallprompt",function(e){e.preventDefault();BIP=e;showIns()});
 addEventListener("appinstalled",function(){BIP=null;document.getElementById("ins").classList.remove("on");toast("Application installée ✓")});
-// Chrome envoie beforeinstallprompt s'il peut installer ; s'il ne l'a pas fait, l'appli est sans doute déjà installée.
-setTimeout(function(){if(!BIP&&!standalone()&&!isChrome())showIns()},3000);
+// Chrome envoie beforeinstallprompt s'il peut installer. Sinon : explications, sauf si l'appli est déjà installée.
+setTimeout(function(){if(BIP||standalone())return;var g=navigator.getInstalledRelatedApps;
+ (g?g.call(navigator).catch(function(){return []}):Promise.resolve([])).then(function(a){if(!(a&&a.length))showIns()})},3500);
 </script>
 </body>
 </html>
