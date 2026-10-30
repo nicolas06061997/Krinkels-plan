@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Krinkels Plan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f3b2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Krinkels">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <style>
 :root{--bg:#f1f5f3;--card:#fff;--tx:#12201a;--mut:#69776f;--ac:#17935f;--acd:#0f3b2b;--acl:#e4f5ec;--bd:#e3e9e5;--warn:#d97a0b;--wl:#fff2df;--pin:#e0463f;--map:#e9efe3;--sh:0 1px 2px rgba(16,40,28,.05),0 8px 22px rgba(16,40,28,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1411;--card:#16201b;--tx:#ebf2ee;--mut:#8ea198;--acl:#173a2b;--bd:#26342d;--wl:#3a2810;--map:#1b2a22;--ac:#2fbf86;--sh:0 1px 2px #0006}}
@@ -294,5 +302,6 @@ function upl(el){var f=el.files[0];if(!f)return;var r=new FileReader();r.onload=
 function rz(b){if(!b._c){b._c=1;b.textContent="Appuie encore pour confirmer";setTimeout(function(){b._c=0;b.textContent="Tout remettre à zéro (tous les districts)"},4000);return}S.d.forEach(resetR);save();sh(0);draw();toast("Tout est remis à zéro")}
 draw();
 </script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>
 </body>
 </html>
