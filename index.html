@@ -194,7 +194,7 @@ function fetchBE(){var t=S.t;if(t.lat==null)return;var tk=t.bk=(t.bk||0)+1,la=t.
    (j.elements||[]).forEach(function(e){var g=e.tags||{},la=e.lat!=null?e.lat:(e.center&&e.center.lat),lo=e.lon!=null?e.lon:(e.center&&e.center.lon),id=e.type+e.id;if(la==null||seen[id])return;seen[id]=1;L.push({id:id,lat:la,lon:lo,nom:g.name||g.brand||"Total",rue:((g["addr:housenumber"]||"")+" "+(g["addr:street"]||"")).trim(),ville:((g["addr:postcode"]||"")+" "+(g["addr:city"]||"")).trim(),h:g.opening_hours||"",dz:g["fuel:diesel"]==="yes"})});
    got(L)}).catch(function(){clearTimeout(to);nx()})}
  st();upd()}
-function near(){var t=S.t;if(t.lat==null)return;if(needBE())fetchBE();if(!t.all)return;t.all.forEach(function(s){s.d=hav(t.lat,t.lon,s.lat,s.lon)});t.nl=t.all.filter(function(s){return s.d<=RAY}).sort(function(a,b){return a.d-b.d}).slice(0,15);t.up=Date.now();
+function near(){var t=S.t;if(t.lat==null)return;if(needBE())fetchBE();if(!t.all)return;t.all.forEach(function(s){s.d=hav(t.lat,t.lon,s.lat,s.lon)});var w=t.all.filter(function(s){return s.d<=RAY});t.nb=w.length;t.nl=w.sort(function(a,b){return a.d-b.d}).slice(0,15);t.up=Date.now();
  if(!t.nl.length){t.best=null;return}
  var r=t.rt;if(!r||hav(t.lat,t.lon,r.lat,r.lon)>0.3||Date.now()-r.t>90000)routeBest()}
 function est(s){var km=s.d*1.35;return{s:s,km:km,dur:km/55*3600,est:1}}
@@ -209,7 +209,7 @@ function infoHtml(){var t=S.t,b=t.best,mp='<a class="go" style="margin-top:10px"
  if(!t.all||(t.ld&&!(t.nl&&t.nl.length)))return '<div class="tinfo">'+(t.de&&!t.ld?'<p class="hint" style="color:var(--warn)">'+esc(t.de)+'</p>'+mp:'<p class="hint">⏳ Recherche des stations Total à moins de '+RAY+' km…</p>')+'</div>';
  if(!(t.nl&&t.nl.length))return '<div class="tinfo"><p class="hint">Aucune station Total à moins de '+RAY+' km.</p>'+mp+'</div>';
  if(!b)return '<div class="tinfo"><p class="hint">Calcul en cours…</p></div>';
- return '<div class="tinfo"><div class="tt">⏱ '+(b.est?'≈ ':'')+fmt(b.dur)+'</div><div class="ts">'+fk(b.km)+' km en voiture'+(b.est?' (estimation)':'')+'</div><div class="tn"><b>'+esc(b.s.nom)+'</b>'+(adr(b.s)?'<br>'+esc(adr(b.s)):'')+'</div>'+itin(b.s)+'<p class="hint">'+t.nl.length+(t.nl.length>1?' stations':' station')+' Total à moins de '+RAY+' km · mise à jour '+new Date(t.up||Date.now()).toLocaleTimeString("fr-BE",{hour:"2-digit",minute:"2-digit"})+(t.acc&&!t.old?' · position ±'+t.acc+' m':'')+'</p>'+(t.old?'<p class="hint" style="color:var(--warn)">Dernière position connue'+(t.ge?' — '+esc(t.ge):' — en attente du GPS…')+'</p>':'')+'</div>'}
+ return '<div class="tinfo"><div class="tt">⏱ '+(b.est?'≈ ':'')+fmt(b.dur)+'</div><div class="ts">'+fk(b.km)+' km en voiture'+(b.est?' (estimation)':'')+'</div><div class="tn"><b>'+esc(b.s.nom)+'</b>'+(adr(b.s)?'<br>'+esc(adr(b.s)):'')+'</div>'+itin(b.s)+'<p class="hint">'+t.nb+(t.nb>1?' stations':' station')+' Total à moins de '+RAY+' km · mise à jour '+new Date(t.up||Date.now()).toLocaleTimeString("fr-BE",{hour:"2-digit",minute:"2-digit"})+(t.acc&&!t.old?' · position ±'+t.acc+' m':'')+'</p>'+(t.old?'<p class="hint" style="color:var(--warn)">Dernière position connue'+(t.ge?' — '+esc(t.ge):' — en attente du GPS…')+'</p>':'')+'</div>'}
 function listHtml(){var t=S.t,o="";(t.nl||[]).slice(0,10).forEach(function(x){o+='<div class="sn"><div class="dk">'+fk(x.d)+'<small>km</small></div><div class="rb"><b>'+esc(x.nom)+'</b><div class="meta">'+(adr(x)?'<span>'+esc(adr(x))+'</span>':'')+(x.dz?'<span class="pill g">Diesel</span>':'')+(x.h?'<span>🕒 '+esc(x.h.length>40?x.h.slice(0,40)+"…":x.h)+'</span>':'')+'</div><div class="ra">'+itin(x)+'</div></div></div>'});return o||'<div class="empty">La liste apparaît dès que ta position est connue.</div>'}
 function totalPage(){return '<section class="card"><div class="hd"><h2>⛽ Total la plus proche</h2><button class="btn" onclick="refT()">↻ Actualiser</button></div><div class="tmap" id="tmap"></div><div id="tinfo">'+infoHtml()+'</div></section><section class="card"><h2>Autres stations proches <span class="ch">à vol d’oiseau</span></h2><div id="tlist">'+listHtml()+'</div></section>'}
 function refT(){var t=S.t;t.rt=null;t.mu=0;t.need=1;if(GW==null)startGeo();near();upd()}
@@ -223,7 +223,7 @@ function drawMap(){var e=document.getElementById("tmap");if(!e)return;var t=S.t,
  var z=c.z,n=Math.pow(2,z),X0=Math.floor(c.x-W/512),X1=Math.floor(c.x+W/512),Y0=Math.floor(c.y-H/512),Y1=Math.floor(c.y+H/512);
  function P(a,o){return [(lx(o,z)-c.x)*256+W/2,(ly(a,z)-c.y)*256+H/2]}
  h+='<div id="tmv">';
- for(var X=X0;X<=X1;X++)for(var Y=Y0;Y<=Y1;Y++){if(Y<0||Y>=n)continue;h+='<img class="tl" draggable="false" alt="" src="https://tile.openstreetmap.org/'+z+'/'+(((X%n)+n)%n)+'/'+Y+'.png" style="left:'+Math.round((X-c.x)*256+W/2)+'px;top:'+Math.round((Y-c.y)*256+H/2)+'px">'}
+ for(var X=X0;X<=X1;X++)for(var Y=Y0;Y<=Y1;Y++){if(Y<0||Y>=n)continue;h+='<img class="tl" draggable="false" alt="" crossorigin="anonymous" src="https://tile.openstreetmap.org/'+z+'/'+(((X%n)+n)%n)+'/'+Y+'.png" style="left:'+Math.round((X-c.x)*256+W/2)+'px;top:'+Math.round((Y-c.y)*256+H/2)+'px">'}
  (t.nl||[]).slice(0,10).forEach(function(s){var p=P(s.lat,s.lon);if(p[0]<-30||p[0]>W+30||p[1]<-40||p[1]>H+30)return;var b=t.best&&t.best.s.id===s.id;h+='<div class="mk'+(b?' b':'')+'" style="left:'+p[0]+'px;top:'+p[1]+'px">⛽</div>'});
  if(t.lat!=null){var u=P(t.lat,t.lon);h+='<div class="me" style="left:'+u[0]+'px;top:'+u[1]+'px"></div>'}
  e.innerHTML=h+'</div><div class="mz"><button onclick="mz(1)" aria-label="Zoom +">+</button><button onclick="mz(-1)" aria-label="Zoom −">−</button><button onclick="mre()" aria-label="Recentrer">◎</button></div><div class="mat">© OpenStreetMap</div>'}
@@ -314,7 +314,7 @@ draw();
 <div id="upd"><div><b>🎉 Nouvelle mise à jour disponible</b><small id="updn"></small></div><button onclick="location.reload()">Mettre à jour</button></div>
 <script>
 // Version de l'appli : à changer ici ET dans version.json à chaque mise à jour.
-var APPV="2026-10-30.1";
+var APPV="2026-10-30.2";
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js')});
 function chkV(){if(!window.fetch)return;fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){if(!j||!j.v||j.v===APPV)return;document.getElementById("updn").textContent=j.notes||"";document.getElementById("upd").classList.add("on")}).catch(function(){})}
 (function(){try{var o=localStorage.getItem("krinkels-v");localStorage.setItem("krinkels-v",APPV);if(o&&o!==APPV)setTimeout(function(){toast("Application mise à jour ✓")},600)}catch(x){}})();
