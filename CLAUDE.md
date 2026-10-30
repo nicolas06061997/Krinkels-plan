@@ -14,3 +14,9 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
 ## Stations Total
 `stations.json` est généré chaque semaine par `.github/workflows/stations.yml` (`scripts/stations.py`, Overpass).
 L'appli garde les stations à moins de 50 km (`RAY`), avec Overpass en direct en secours.
+
+## Jeu « La Fine Crasse » (dossier `la-fine-crasse/`)
+Jeu 3D (Three.js r128 via CDN) publié au même endroit : https://nicolas06061997.github.io/Krinkels-plan/la-fine-crasse/
+Il a ses propres `manifest.webmanifest`, `sw.js` (cache `finecrasse-<version>`), `version.json` et icônes.
+À chaque modification du jeu : changer `APPV` en bas de `la-fine-crasse/index.html` **et** `v` dans `la-fine-crasse/version.json` (même valeur), avec une phrase dans `notes`.
+Ne jamais ajouter de code dans le script du jeu après `requestAnimationFrame(loop)` : le code d'installation est dans un `<script>` séparé, à la fin.
