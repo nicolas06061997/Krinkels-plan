@@ -317,7 +317,7 @@ draw();
 <script>
 // Version de l'appli : la seule à changer à chaque mise à jour, avec la même valeur dans version.json.
 // Le service worker est enregistré avec cette version (sw.js?v=…), ce qui force son remplacement et vide l'ancien cache.
-var APPV="2026-10-30.5";
+var APPV="2026-10-30.6";
 var SWR=null,BIP=null;
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
 
@@ -349,7 +349,8 @@ function insLater(){try{localStorage.setItem("krinkels-ins",Date.now())}catch(x)
 function doIns(){if(BIP){var e=BIP;BIP=null;e.prompt();e.userChoice.then(function(c){if(c&&c.outcome==="accepted")document.getElementById("ins").classList.remove("on");else insLater()}).catch(function(){});return}
  var u=location.href.split("#")[0];
  if(isAndroid()){location.href="intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";return}(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast("Lien copié ✓ Colle-le dans Chrome")}).catch(function(){prompt("Copie ce lien et ouvre-le dans Chrome :",u)})}
-addEventListener("beforeinstallprompt",function(e){e.preventDefault();BIP=e;showIns()});
+// Pas de preventDefault : Chrome affiche aussi sa propre barre « Installer ».
+addEventListener("beforeinstallprompt",function(e){BIP=e;showIns()});
 addEventListener("appinstalled",function(){BIP=null;document.getElementById("ins").classList.remove("on");toast("Application installée ✓")});
 // Chrome envoie beforeinstallprompt s'il peut installer. Sinon : explications, sauf si l'appli est déjà installée.
 setTimeout(function(){if(BIP||standalone())return;var g=navigator.getInstalledRelatedApps;
