@@ -1,5 +1,5 @@
 // Garde l'application disponible hors ligne ; les cartes et API externes passent toujours par le réseau.
-const CACHE = 'krinkels-v1';
+const CACHE = 'krinkels-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {

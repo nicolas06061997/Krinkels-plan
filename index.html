@@ -207,7 +207,7 @@ function totalPage(){return '<section class="card"><div class="hd"><h2>⛽ Total
 function refT(){var t=S.t;t.rt=null;t.dbT=0;t.mu=0;fetchBE();if(GW==null)startGeo();else near();upd()}
 function lx(o,z){return (o+180)/360*Math.pow(2,z)}
 function ly(a,z){var r=a*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z)}
-function fitMap(W,H){var t=S.t;if(t.mc&&t.mu)return t.mc;if(t.lat==null)return null;var q=[[t.lat,t.lon]],o=t.best?t.best.s:(t.nl&&t.nl[0]);if(o)q.push([o.lat,o.lon]);var z=16,xs,ys;
+function fitMap(W,H){var t=S.t;if(t.mc&&t.mu)return t.mc;if(t.lat==null)return null;var q=[[t.lat,t.lon]],o=t.best?t.best.s:null,o2=t.nl&&t.nl[0];if(o)q.push([o.lat,o.lon]);if(o2&&o2!==o)q.push([o2.lat,o2.lon]);var z=16,xs,ys;
  for(;z>5;z--){xs=q.map(function(p){return lx(p[1],z)*256});ys=q.map(function(p){return ly(p[0],z)*256});if(Math.max.apply(0,xs)-Math.min.apply(0,xs)<W*.7&&Math.max.apply(0,ys)-Math.min.apply(0,ys)<H*.6)break}
  xs=q.map(function(p){return lx(p[1],z)*256});ys=q.map(function(p){return ly(p[0],z)*256});t.mc={x:(Math.min.apply(0,xs)+Math.max.apply(0,xs))/512,y:(Math.min.apply(0,ys)+Math.max.apply(0,ys))/512,z:z};return t.mc}
 function drawMap(){var e=document.getElementById("tmap");if(!e)return;var t=S.t,W=e.clientWidth||360,H=e.clientHeight||300,c=fitMap(W,H),h="";
@@ -224,6 +224,7 @@ function mre(){S.t.mu=0;drawMap()}
 if(document.addEventListener){(function(){var dg=null;
  document.addEventListener("pointerdown",function(e){var tg=e.target;if(!tg||!tg.closest||!tg.closest("#tmap")||tg.closest(".mz"))return;dg={x:e.clientX,y:e.clientY,dx:0,dy:0}});
  document.addEventListener("pointermove",function(e){if(!dg)return;dg.dx=e.clientX-dg.x;dg.dy=e.clientY-dg.y;var v=document.getElementById("tmv");if(v)v.style.transform="translate("+dg.dx+"px,"+dg.dy+"px)"});
+ document.addEventListener("pointercancel",function(){var v=document.getElementById("tmv");if(v)v.style.transform="";dg=null});
  document.addEventListener("pointerup",function(){if(!dg)return;var t=S.t,c=t.mc;if(c&&(Math.abs(dg.dx)+Math.abs(dg.dy)>3)){c.x-=dg.dx/256;c.y-=dg.dy/256;t.mu=1;drawMap()}dg=null})})()}
 function nearHtml(){var t=S.t,b=t.best,k='<div class="k">⛽ Total la plus proche</div>',mp='<a class="go" href="'+MAPT+'" target="_blank" rel="noopener">Chercher dans Google Maps</a>';
  if(t.lat!=null&&b)return '<div class="dk">'+(b.est?'≈':'')+dkT(b.dur)+'</div><div class="rb">'+k+'<b>'+esc(b.s.nom)+'</b><div class="meta"><span>'+fk(b.km)+' km en voiture'+(b.est?' (estimation)':'')+'</span>'+(t.old?'<span>dernière position</span>':'')+(adr(b.s)?'<span>'+esc(adr(b.s))+'</span>':'')+'</div><div class="ra">'+itin(b.s)+'<button class="pb" style="border-color:var(--ac);color:var(--ac)" onclick="go(\'total\')">Voir la carte</button></div></div>';
