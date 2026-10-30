@@ -8,8 +8,8 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
 ## À chaque modification de l'appli
 1. Changer `APPV` en bas de `index.html` **et** `v` dans `version.json` (même valeur, format `AAAA-MM-JJ.n`, différente à chaque fois).
    Mettre dans `notes` de `version.json` une phrase courte sur la nouveauté : elle s'affiche dans le message « Nouvelle mise à jour disponible ».
-2. Incrémenter `CACHE` dans `sw.js`.
-3. Commit + push sur `claude/github-sur-cjesdk` ; GitHub Pages publie en 2-3 minutes.
+   Le service worker est enregistré en `sw.js?v=APPV` : son cache (`krinkels-<version>`) change tout seul, rien à modifier dans `sw.js`.
+2. Commit + push sur `claude/github-sur-cjesdk` ; GitHub Pages publie en 2-3 minutes.
 
 ## Stations Total
 `stations.json` est généré chaque semaine par `.github/workflows/stations.yml` (`scripts/stations.py`, Overpass).

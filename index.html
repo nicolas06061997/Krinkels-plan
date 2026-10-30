@@ -81,7 +81,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:12;display:flex;justify-conte
 nav div{display:flex;width:100%;max-width:520px;background:var(--card);border:1px solid var(--bd);border-radius:22px;box-shadow:0 8px 28px rgba(8,40,28,.2);padding:6px}
 nav button{flex:1;min-width:0;border:0;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:7px 0;border-radius:16px}nav button:active{background:var(--acl);color:var(--ac)}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);transform:translate(-50%,20px);background:#12201a;color:#fff;padding:11px 18px;border-radius:24px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:40;box-shadow:0 8px 24px #0005}#toast.on{opacity:1;transform:translate(-50%,0)}
-#upd{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:41;display:none;gap:12px;align-items:center;background:var(--acd);color:#fff;padding:14px 16px;border-radius:18px;box-shadow:0 10px 30px #0006}#upd.on{display:flex}#upd div{flex:1;line-height:1.3}#upd b{display:block;font-size:15px}#upd small{opacity:.8;font-size:13px}#upd button{border:0;border-radius:12px;background:#3ed59b;color:#06281b;font-weight:800;font-size:14px;padding:11px 14px;white-space:nowrap}
+#upd,#ins{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:41;display:none;gap:10px;align-items:center;background:var(--acd);color:#fff;padding:14px 14px 14px 16px;border-radius:18px;box-shadow:0 10px 30px #0006}#upd.on,#ins.on{display:flex}#upd>div,#ins>div{flex:1;line-height:1.3}#upd b,#ins b{display:block;font-size:15px}#upd small,#ins small{opacity:.8;font-size:13px}#upd button,#ins button{border:0;border-radius:12px;background:#3ed59b;color:#06281b;font-weight:800;font-size:14px;padding:11px 14px;white-space:nowrap}#ins .x{background:transparent;color:#fff;opacity:.7;font-size:20px;padding:6px 8px}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;z-index:50;flex-direction:column}.ov.on{display:flex}
 .ovt{display:flex;gap:8px;justify-content:flex-end;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px}
 .ovt button{border:0;border-radius:22px;padding:10px 18px;font-size:16px;font-weight:700;background:#fff;color:#111}
@@ -302,6 +302,7 @@ function sh(o){var p=document.getElementById("sp");if(o){var d=cur();
  p.innerHTML='<div class="grab"></div><h3 style="font-size:22px">Réglages</h3><h4>Ajouter une route</h4><select id="nd">'+S.d.map(function(x){return '<option value="'+x.id+'"'+(x.id===S.sel?' selected':'')+'>'+esc(x.nom)+'</option>'}).join("")+'</select><input id="nn" placeholder="Nom (ex. N62 - Avenue Léopold II)"><button class="btn s" onclick="addR()">Ajouter la route</button>'+
  '<h4>Ajouter un district</h4><input id="dn" placeholder="Nom du district"><button class="btn" onclick="addD()">Ajouter le district</button>'+
  '<h4>Plan du district sélectionné</h4><input type="file" accept="image/*" onchange="upl(this)">'+(d&&d.plan?'<button class="btn" onclick="cur().plan=\'\';save();sh(0);draw()">Revenir au plan automatique</button>':'')+
+ '<h4>Application</h4><p class="hint" style="margin:0 0 8px">Version '+APPV+(standalone()?' · installée sur ce téléphone ✓':'')+'</p>'+(standalone()?'':'<button class="btn" style="margin:0 8px 8px 0" onclick="sh(0);showIns(1)">📲 Installer l’application</button>')+'<button class="btn" onclick="chkV(1)">↻ Vérifier les mises à jour</button>'+
  '<h4>Remise à zéro</h4><button class="btn" onclick="rz(this)">Tout remettre à zéro (tous les districts)</button><p style="text-align:center;margin:16px 0 0"><button class="btn s" onclick="sh(0)">Fermer</button></p>'}
  document.getElementById("sh").classList.toggle("on",!!o)}
 function addR(){var n=document.getElementById("nn").value.trim();if(!n){alert("Écris le nom de la route");return}
@@ -312,14 +313,41 @@ function rz(b){if(!b._c){b._c=1;b.textContent="Appuie encore pour confirmer";set
 draw();
 </script>
 <div id="upd"><div><b>🎉 Nouvelle mise à jour disponible</b><small id="updn"></small></div><button onclick="location.reload()">Mettre à jour</button></div>
+<div id="ins"><div><b>📲 Installer Krinkels Plan</b><small id="insm"></small></div><button id="insb" onclick="doIns()">Installer</button><button class="x" onclick="insLater()" aria-label="Plus tard">✕</button></div>
 <script>
-// Version de l'appli : à changer ici ET dans version.json à chaque mise à jour.
-var APPV="2026-10-30.2";
-if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js')});
-function chkV(){if(!window.fetch)return;fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){if(!j||!j.v||j.v===APPV)return;document.getElementById("updn").textContent=j.notes||"";document.getElementById("upd").classList.add("on")}).catch(function(){})}
+// Version de l'appli : la seule à changer à chaque mise à jour, avec la même valeur dans version.json.
+// Le service worker est enregistré avec cette version (sw.js?v=…), ce qui force son remplacement et vide l'ancien cache.
+var APPV="2026-10-30.3";
+var SWR=null,BIP=null;
+if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
+
+function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
+ fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+  if(!j||!j.v||j.v===APPV){if(man)toast("L’application est à jour ✓ (version "+APPV+")");return}
+  if(man)sh(0);document.getElementById("updn").textContent=j.notes||"";document.getElementById("ins").classList.remove("on");document.getElementById("upd").classList.add("on")}).catch(function(){if(man)toast("Pas de connexion")})}
 (function(){try{var o=localStorage.getItem("krinkels-v");localStorage.setItem("krinkels-v",APPV);if(o&&o!==APPV)setTimeout(function(){toast("Application mise à jour ✓")},600)}catch(x){}})();
 chkV();setInterval(chkV,30*60000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden)chkV()});
+
+// Installation : bouton direct quand le navigateur le permet (Chrome Android), sinon explications.
+function standalone(){try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(x){return false}}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
+function isChrome(){var u=navigator.userAgent;return /Chrome\//.test(u)&&!/EdgA?\/|OPR\/|SamsungBrowser|HuaweiBrowser|HeyTapBrowser|MiuiBrowser|YaBrowser|Firefox|FxiOS|CriOS/.test(u)}
+function showIns(force){if(standalone()||document.getElementById("upd").classList.contains("on"))return;
+ if(!force){try{if(Date.now()-(+localStorage.getItem("krinkels-ins")||0)<3*864e5)return}catch(x){}}
+ var m=document.getElementById("insm"),b=document.getElementById("insb");
+ if(BIP){m.textContent="Ajoute l’appli sur ton écran d’accueil, en un appui.";b.textContent="Installer";b.style.display=""}
+ else if(isIOS()){m.textContent="Dans Safari : touche Partager ⬆️ puis « Sur l’écran d’accueil ».";b.style.display="none"}
+ else if(isChrome()){m.textContent="Menu ⋮ en haut à droite → « Installer l’application ».";b.style.display="none"}
+ else{m.textContent="Ce navigateur ne peut pas l’installer : copie le lien et ouvre-le dans Chrome.";b.textContent="Copier le lien";b.style.display=""}
+ document.getElementById("ins").classList.add("on")}
+function insLater(){try{localStorage.setItem("krinkels-ins",Date.now())}catch(x){}document.getElementById("ins").classList.remove("on")}
+function doIns(){if(BIP){var e=BIP;BIP=null;e.prompt();e.userChoice.then(function(c){if(c&&c.outcome==="accepted")document.getElementById("ins").classList.remove("on");else insLater()}).catch(function(){});return}
+ var u=location.href.split("#")[0];(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){toast("Lien copié ✓ Colle-le dans Chrome")}).catch(function(){prompt("Copie ce lien et ouvre-le dans Chrome :",u)})}
+addEventListener("beforeinstallprompt",function(e){e.preventDefault();BIP=e;showIns()});
+addEventListener("appinstalled",function(){BIP=null;document.getElementById("ins").classList.remove("on");toast("Application installée ✓")});
+// Chrome envoie beforeinstallprompt s'il peut installer ; s'il ne l'a pas fait, l'appli est sans doute déjà installée.
+setTimeout(function(){if(!BIP&&!standalone()&&!isChrome())showIns()},3000);
 </script>
 </body>
 </html>

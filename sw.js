@@ -1,6 +1,7 @@
 // Service worker de Krinkels Plan : appli disponible hors ligne et mises à jour immédiates.
-// Changer CACHE à chaque mise à jour de l'appli (voir CLAUDE.md).
-const CACHE = 'krinkels-v7';
+// La version vient de index.html (APPV), passée dans l'adresse : sw.js?v=…
+const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
+const CACHE = 'krinkels-' + VERSION;
 const TILES = 'krinkels-tuiles';
 const MAX_TILES = 400;
 const FILES = ['./', './index.html', './manifest.webmanifest',
@@ -8,7 +9,8 @@ const FILES = ['./', './index.html', './manifest.webmanifest',
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE)
-    .then(c => c.addAll(FILES).then(() => c.add('./stations.json').catch(() => {})))
+    .then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))
+      .then(() => c.add(new Request('./stations.json', { cache: 'reload' })).catch(() => {})))
     .then(() => self.skipWaiting()));
 });
 
